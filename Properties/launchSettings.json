@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TistoryConvertor": {
+      "commandName": "Project",
+      "commandLineArgs": "data.xml output"
+    }
+  }
+}
