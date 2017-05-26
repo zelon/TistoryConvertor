@@ -19,10 +19,7 @@ namespace TistoryConvertor.PostOutput
 
         public void OnPost(Post post)
         {
-            Console.WriteLine("----------------------------------------------------------");
-            Console.WriteLine("Title: {0}", post.Title);
-            Console.WriteLine("PublishedTime: {0}", post.PublishedTime.ToString("u"));
-            Console.WriteLine(post.Content);
+            Console.WriteLine("Converting Id:{0} Title:{1}", post.Id, post.Title);
 
             Directory.CreateDirectory(GetPostDirectory(post));
 
@@ -45,12 +42,19 @@ namespace TistoryConvertor.PostOutput
 
         private void WriteMarkdownFile(Post post)
         {
-            WriteFileContent(post.Id, "index.md", post.Content);
+            WriteFileContent(post.Id, "index.md", MarkdownConvertor.ToMarkdown(post.Content));
         }
 
         private void WriteAttachments(Post post)
         {
-
+            foreach (var attachment in post.AttachmentFiles)
+            {
+                string output_filename = Path.Combine(OutputDirectoryName, post.Id.ToString(), attachment.Name);
+                using (var file_stream = File.OpenWrite(output_filename))
+                {
+                    file_stream.Write(attachment.Content, 0, attachment.Content.Length);
+                }
+            }
         }
 
         private string GetPostDirectory(Post post)
@@ -61,10 +65,9 @@ namespace TistoryConvertor.PostOutput
         private void WriteFileContent(int post_id, string filename, string content)
         {
             string output_filename = Path.Combine(OutputDirectoryName, post_id.ToString(), filename);
-            byte[] encoded_bytes = System.Text.Encoding.UTF8.GetBytes(content);
-            using (var file_stream = File.OpenWrite(output_filename))
+            using (var file_stream = File.CreateText(output_filename))
             {
-                file_stream.Write(encoded_bytes, 0, encoded_bytes.Length);
+                file_stream.Write(content);
             }
         }
     }

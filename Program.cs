@@ -38,7 +38,7 @@ namespace TistoryConvertor
                 var elements = xml_document.GetElementsByTagName("post");
                 foreach (XmlNode post_element in elements)
                 {
-                    var post = Post.Parse(post_element);
+                    var post = ParseUtil.ParsePost(post_element);
                     post_output.OnPost(post);
                 }
             }
