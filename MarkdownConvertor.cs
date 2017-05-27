@@ -1,26 +1,42 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.IO;
+using System.Text.RegularExpressions;
 
 namespace TistoryConvertor
 {
     class MarkdownConvertor
     {
-        public static string ToMarkdown(string content)
+        public static string ToMarkdown(Post post)
         {
-            content = ReplaceImagePart(content);
-            content = ConvertByPandoc(content);
-            return content;
+            string converted = ReplaceImagePart(post.Content);
+            converted = ConvertByPandoc(converted);
+            return converted;
         }
 
         private static string ReplaceImagePart(string content)
         {
-            return content;
+            Regex assert_ex = new Regex(@"\[##.*?##\]");
+            var match_collection = assert_ex.Matches(content);
+            foreach (var match in match_collection)
+            {
+                // ##_1C로 시작해서, |_##] 로 항상 끝나는지 체크한다
+                System.Diagnostics.Debug.Assert(match.ToString().StartsWith("[##_1C|"));
+                System.Diagnostics.Debug.Assert(match.ToString().EndsWith("|_##]"));
+            }
+            Regex ex = new Regex("\\[##_1C.*?width=\\\"(\\d+)\\\" height=\\\"(\\d+)\\\" filename=\\\"(.*?)\\\".*?##\\]");
+            match_collection = ex.Matches(content);
+            foreach (Match match in match_collection)
+            {
+                string width = match.Groups[1].Value;
+                string height = match.Groups[2].Value;
+                string filename = match.Groups[3].Value;
+            }
+            
+            string replaced = ex.Replace(content, "<img src=\"$3\" width=\"$1\" height=\"$2\" />");
+            return replaced;
         }
+
         private static string ConvertByPandoc(string content)
         {
-            // pandoc -f html -t markdown_github test.html > test.md
             string temp_filename = Path.GetTempFileName();
             Util.WriteFileContent(temp_filename, content);
 
@@ -49,6 +65,5 @@ namespace TistoryConvertor
             process.Start();
             process.WaitForExit();
         }
-
     }
 }

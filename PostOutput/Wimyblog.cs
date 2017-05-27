@@ -42,7 +42,7 @@ namespace TistoryConvertor.PostOutput
 
         private void WriteMarkdownFile(Post post)
         {
-            WriteFileContent(post.Id, "index.md", MarkdownConvertor.ToMarkdown(post.Content));
+            WriteFileContent(post.Id, "index.md", MarkdownConvertor.ToMarkdown(post));
         }
 
         private void WriteAttachments(Post post)

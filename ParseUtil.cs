@@ -36,7 +36,7 @@ namespace TistoryConvertor
         private static AttachmentFile ParseAttachment(XmlNode node)
         {
             var attachment_file = new AttachmentFile();
-            attachment_file.Name = node["name"].InnerText;
+            attachment_file.Name = node["label"].InnerText;
             attachment_file.Mime = node.Attributes["mime"].InnerText;
             attachment_file.Width = int.Parse(node.Attributes["width"].InnerText);
             attachment_file.Height = int.Parse(node.Attributes["height"].InnerText);
