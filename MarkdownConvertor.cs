@@ -1,37 +1,76 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace TistoryConvertor
 {
     class MarkdownConvertor
     {
+        // width, height에는 소수점이 있을 때도 있어서 \d 를 사용할 수 없다
+        private static Regex image_regex = new Regex("\\[##_1C.*?width=\\\"(.*?)\\\" height=\\\"(.*?)\\\".*?filename=\\\"(.*?)\\\".*?##\\]");
+
         public static string ToMarkdown(Post post)
         {
-            string converted = ReplaceImagePart(post.Content);
+            AssertAllImageReplacerMark(post);
+            string converted = ReplaceImagePart(post);
+            AssertReferencingImageFileExsit(post, converted);
             converted = ConvertByPandoc(converted);
             return converted;
         }
 
-        private static string ReplaceImagePart(string content)
+        // 모든 이미지 태그가 ##_1C로 시작해서, |_##] 로 항상 끝나는지 체크한다
+        private static void AssertAllImageReplacerMark(Post post)
         {
             Regex assert_ex = new Regex(@"\[##.*?##\]");
-            var match_collection = assert_ex.Matches(content);
+            var match_collection = assert_ex.Matches(post.Content);
             foreach (var match in match_collection)
             {
-                // ##_1C로 시작해서, |_##] 로 항상 끝나는지 체크한다
-                System.Diagnostics.Debug.Assert(match.ToString().StartsWith("[##_1C|"));
-                System.Diagnostics.Debug.Assert(match.ToString().EndsWith("|_##]"));
+                Debug.Assert(match.ToString().StartsWith("[##_1C|"));
+                Debug.Assert(match.ToString().EndsWith("|_##]"));
             }
-            Regex ex = new Regex("\\[##_1C.*?width=\\\"(\\d+)\\\" height=\\\"(\\d+)\\\" filename=\\\"(.*?)\\\".*?##\\]");
-            match_collection = ex.Matches(content);
+        }
+
+        // 모든 이미지 파일이 실제로 백업 파일 안에 존재하는지, 그 반대도 존재하는지 체크한다
+        private static void AssertReferencingImageFileExsit(Post post, string converted_content)
+        {
+            Regex image_tag = new Regex("<img src=\\\"(.*?)\\\"");
+            var match_collection = image_tag.Matches(converted_content);
+            List<string> referencing_filenames = new List<string>();
             foreach (Match match in match_collection)
             {
-                string width = match.Groups[1].Value;
-                string height = match.Groups[2].Value;
-                string filename = match.Groups[3].Value;
+                referencing_filenames.Add(match.Groups[1].Value);
             }
-            
-            string replaced = ex.Replace(content, "<img src=\"$3\" width=\"$1\" height=\"$2\" />");
+            referencing_filenames.Sort();
+
+            List<string> attachment_filenames = new List<string>();
+            foreach (var attachment in post.AttachmentFiles)
+            {
+                attachment_filenames.Add(attachment.Label);
+            }
+            attachment_filenames.Sort();
+
+            Debug.Assert(referencing_filenames.Count == attachment_filenames.Count);
+            for (var i=0; i<referencing_filenames.Count; ++i)
+            {
+                Debug.Assert(referencing_filenames[i] == attachment_filenames[i]);
+            }
+        }
+
+        private static string ReplaceImagePart(Post post)
+        {
+            string replaced = post.Content;
+            // 가끔 label이 아니라 name으로 참조되어있는 것들은 먼저 label로 변환시킨다
+            foreach (var attachment in post.AttachmentFiles)
+            {
+                replaced = replaced.Replace(attachment.Name, attachment.Label);
+            }
+            return TistoryImageReplacerToHtmlImageTag(replaced);
+        }
+        
+        private static string TistoryImageReplacerToHtmlImageTag(string content)
+        {
+            string replaced = image_regex.Replace(content, "<img src=\"$3\" width=\"$1\" height=\"$2\" />");
             return replaced;
         }
 
@@ -56,8 +95,8 @@ namespace TistoryConvertor
 
         private static void ExecuteCommandLine(string cmd)
         {
-            System.Diagnostics.Process process = new System.Diagnostics.Process();
-            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.CreateNoWindow = true;
             startInfo.FileName = "cmd.exe";
             startInfo.Arguments = "/C " + cmd;

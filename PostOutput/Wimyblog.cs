@@ -49,7 +49,7 @@ namespace TistoryConvertor.PostOutput
         {
             foreach (var attachment in post.AttachmentFiles)
             {
-                string output_filename = Path.Combine(OutputDirectoryName, post.Id.ToString(), attachment.Name);
+                string output_filename = Path.Combine(OutputDirectoryName, post.Id.ToString(), attachment.Label);
                 using (var file_stream = File.OpenWrite(output_filename))
                 {
                     file_stream.Write(attachment.Content, 0, attachment.Content.Length);
