@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Threading.Tasks;
 
 namespace TistoryConvertor
 {
@@ -35,12 +37,17 @@ namespace TistoryConvertor
             {
                 var xml_document = new XmlDocument();
                 xml_document.Load(stream);
-                var elements = xml_document.GetElementsByTagName("post");
-                foreach (XmlNode post_element in elements)
+                XmlNodeList elements = xml_document.GetElementsByTagName("post");
+                List<XmlNode> xml_nodes = new List<XmlNode>();
+                foreach (XmlNode node in elements)
+                {
+                    xml_nodes.Add(node);
+                }
+                Parallel.ForEach(xml_nodes, (XmlNode post_element) =>
                 {
                     var post = ParseUtil.ParsePost(post_element);
                     post_output.OnPost(post);
-                }
+                });
             }
         }
 
