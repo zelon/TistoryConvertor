@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
 namespace TistoryConvertor
 {
-    class MarkdownConvertor
+    public class MarkdownConvertor
     {
         // width, height에는 소수점이 있을 때도 있어서 \d 를 사용할 수 없다
-        private static Regex image_regex = new Regex("\\[##_1C.*?width=\\\"(.*?)\\\" height=\\\"(.*?)\\\".*?filename=\\\"(.*?)\\\".*?##\\]");
 
         public static string ToMarkdown(Post post)
         {
@@ -26,8 +26,11 @@ namespace TistoryConvertor
             var match_collection = assert_ex.Matches(post.Content);
             foreach (var match in match_collection)
             {
-                Debug.Assert(match.ToString().StartsWith("[##_1C|"));
-                Debug.Assert(match.ToString().EndsWith("|_##]"));
+                string test_string = match.ToString();
+                Debug.Assert(test_string.StartsWith("[##_1C|") |
+                             test_string.StartsWith("[##_1L|") |
+                             test_string.StartsWith("[##_1R|"));
+                Debug.Assert(test_string.EndsWith("_##]"));
             }
         }
 
@@ -50,10 +53,28 @@ namespace TistoryConvertor
             }
             attachment_filenames.Sort();
 
-            Debug.Assert(referencing_filenames.Count == attachment_filenames.Count);
-            for (var i=0; i<referencing_filenames.Count; ++i)
+            if (referencing_filenames.Count == attachment_filenames.Count)
             {
-                Debug.Assert(referencing_filenames[i] == attachment_filenames[i]);
+                return;
+            }
+            else if (referencing_filenames.Count > attachment_filenames.Count)
+            {
+                // 참조한 숫자가 더 많으면, 참조가 모두 제대로 참조하는 지를 검사한다
+                foreach (string referencing_filename in referencing_filenames)
+                {
+                    Debug.Assert(attachment_filenames.Contains(referencing_filename));
+                }
+            }
+            else if (referencing_filenames.Count < attachment_filenames.Count)
+            {
+                // 참조한 숫자가 더 적으면, 참조하지 않은 파일을 본문 아래에 첨부 파일을 넣어줘야 한다.... 구현 중...
+                foreach (string attachment_filename in attachment_filenames)
+                {
+                    if (referencing_filenames.Contains(attachment_filename) == false)
+                    {
+                        Console.WriteLine("Missing reference filename: " + attachment_filename);
+                    }
+                }
             }
         }
 
@@ -67,10 +88,19 @@ namespace TistoryConvertor
             }
             return TistoryImageReplacerToHtmlImageTag(replaced);
         }
-        
-        private static string TistoryImageReplacerToHtmlImageTag(string content)
+
+        public static string TistoryImageReplacerToHtmlImageTag(string content)
         {
-            string replaced = image_regex.Replace(content, "<img src=\"$3\" width=\"$1\" height=\"$2\" />");
+            string replaced = content;
+
+            {
+                Regex image_regex = new Regex("\\[##_1.*?width=\\\"(.*?)\\\" height=\\\"(.*?)\\\".*?filename=\\\"(.*?)\\\".*?##\\]");
+                replaced = image_regex.Replace(replaced, "<img src=\"$3\" width=\"$1\" height=\"$2\" />");
+            }
+            {
+                Regex image_regex = new Regex("\\[##_1.\\|(.*?)\\|width=\\\"(.*?)\\\" height=\\\"(.*?)\\\".*?##\\]");
+                replaced = image_regex.Replace(replaced, "<img src=\"$1\" width=\"$2\" height=\"$3\" />");
+            }
             return replaced;
         }
 

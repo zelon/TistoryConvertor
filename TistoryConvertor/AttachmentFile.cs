@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TistoryConvertor
 {
-    class AttachmentFile
+    public class AttachmentFile
     {
         public string Mime { get; set; }
         public string Name { get; set; }

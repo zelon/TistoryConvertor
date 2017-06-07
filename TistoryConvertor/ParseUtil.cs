@@ -39,7 +39,10 @@ namespace TistoryConvertor
             string real_filename = node["label"].InnerText;
             Debug.Assert(node["name"].InnerText.Length > 0);
             Debug.Assert(real_filename.ToLower().EndsWith("png") |
-                         real_filename.ToLower().EndsWith("jpg"));
+                         real_filename.ToLower().EndsWith("jpg") |
+                         real_filename.ToLower().EndsWith("svg") |
+                         real_filename.ToLower().EndsWith("swf") |
+                         real_filename.ToLower().EndsWith("gif"));
 
 
             var attachment_file = new AttachmentFile();

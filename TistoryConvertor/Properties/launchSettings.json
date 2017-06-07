@@ -2,7 +2,8 @@
   "profiles": {
     "TistoryConvertor": {
       "commandName": "Project",
-      "commandLineArgs": "data.xml output"
+      "commandLineArgs": "data.xml output",
+      "workingDirectory": "E:\\git\\TistoryConvertor"
     }
   }
 }

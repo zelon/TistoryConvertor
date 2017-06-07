@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TistoryConvertor
 {
-    class Comment
+    public class Comment
     {
         public string Author { get; set; }
         public string Content { get; set; }
