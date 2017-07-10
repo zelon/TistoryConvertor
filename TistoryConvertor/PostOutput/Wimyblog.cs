@@ -35,7 +35,7 @@ namespace TistoryConvertor.PostOutput
                 "<metadata>" + Environment.NewLine +
                 "  <title>{0}</title>" + Environment.NewLine +
                 "  <created_time>{1}</created_time>" + Environment.NewLine +
-                "</metadata>", post.Title, DateTime.Now.ToString(Program.DateTimeFormat));
+                "</metadata>", post.Title, post.PublishedTime.ToString(Program.DateTimeFormat));
 
             WriteFileContent(post.Id, "metadata.xml", data);
         }
