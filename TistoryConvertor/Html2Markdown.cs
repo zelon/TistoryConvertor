@@ -19,7 +19,6 @@ namespace TistoryConvertor
             using (var s = File.OpenText(converted_filename))
             {
                 converted_content = s.ReadToEnd();
-
             }
             return converted_content;
         }
